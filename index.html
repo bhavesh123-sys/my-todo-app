@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My To-Do App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      margin: 0;
+      padding: 40px 16px;
+    }
+    .app {
+      max-width: 480px;
+      margin: auto;
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px #0001;
+    }
+    h1 { color: #166534; }
+    .controls { display: flex; gap: 8px; }
+    input {
+      flex: 1;
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+    }
+    button {
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 8px;
+      background: #15803d;
+      color: white;
+      cursor: pointer;
+    }
+    ul { padding: 0; list-style: none; }
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+    li span { flex: 1; overflow-wrap: anywhere; }
+    li.done span {
+      text-decoration: line-through;
+      color: #64748b;
+    }
+    .delete { background: #dc2626; }
+    #message { color: #64748b; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>My To-Do List</h1>
+    <p>Organize your day, one task at a time.</p>
+
+    <form id="taskForm" class="controls">
+      <input id="taskInput" placeholder="Enter a task..." required>
+      <button type="submit">Add</button>
+    </form>
+
+    <p id="message">0 tasks</p>
+    <ul id="taskList"></ul>
+  </main>
+
+  <script>
+    const form = document.getElementById("taskForm");
+    const input = document.getElementById("taskInput");
+    const list = document.getElementById("taskList");
+    const message = document.getElementById("message");
+
+    let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+
+    function save() {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+      render();
+    }
+
+    function render() {
+      list.replaceChildren();
+
+      tasks.forEach((task, index) => {
+        const li = document.createElement("li");
+        li.className = task.done ? "done" : "";
+
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        check.checked = task.done;
+        check.setAttribute("aria-label", "Complete task");
+        check.addEventListener("change", () => {
+          tasks[index].done = check.checked;
+          save();
+        });
+
+        const span = document.createElement("span");
+        span.textContent = task.text;
+
+        const del = document.createElement("button");
+        del.textContent = "Delete";
+        del.className = "delete";
+        del.addEventListener("click", () => {
+          tasks.splice(index, 1);
+          save();
+        });
+
+        li.append(check, span, del);
+        list.appendChild(li);
+      });
+
+      const remaining = tasks.filter(t => !t.done).length;
+      message.textContent =
+        `${tasks.length} tasks · ${remaining} remaining`;
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      tasks.push({ text, done: false });
+      input.value = "";
+      save();
+    });
+
+    render();
+  </script>
+</body>
+</html>
